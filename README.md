@@ -25,6 +25,12 @@ npm run dev
 
 To deploy, run `npm run build` and upload `dist/` to a static host. `npm run preview` is a local check, not a production server. WebGL and hardware acceleration are required. No analytics or external data services are used.
 
+## GitHub Pages
+
+The [publish workflow](.github/workflows/publish.yml) runs on every push to `main` and can also be started manually from the Actions tab. It installs locked dependencies with `npm ci`, runs Vitest, type-checks and builds with Vite, and deploys only the generated `dist/` artifact to the `github-pages` environment.
+
+Pages must use **GitHub Actions** as its publishing source. The Vite configuration uses relative asset URLs (`base: './'`) so the build works under the repository's `/planetary/` path. A failed test or build prevents publication.
+
 ## Explore
 
 - Drag to orbit; scroll to zoom; right-drag or Shift-drag to pan.
