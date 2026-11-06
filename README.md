@@ -1,19 +1,29 @@
 # Planetary
 
-An interactive, dependency-free 3D solar system built with WebGL and native JavaScript. Includes the Sun, all eight planets, an illustrative Earth–Moon system, Saturn's rings, a deterministic star field, and sun-facing lighting.
+An interactive 3D solar system built with WebGL and strict TypeScript. Vite serves and builds the application; Vitest runs the orbital tests. Includes the Sun, all eight planets, an illustrative Earth–Moon system, Saturn's rings, a deterministic star field, and sun-facing lighting. The browser application has no runtime package dependencies.
 
-## Run
+## Develop, test, and build
 
-Requires Python 3 for the development server and Node.js 18+ for checks. No package installation or build step is needed.
+Requires Node.js 20.19+ within v20, or 22.12+ (Node.js 24 LTS recommended), and npm.
 
 ```sh
+npm ci
 npm run dev
-# Open http://localhost:5173
-npm test
-npm run check
+# Open the URL printed by Vite (normally http://localhost:5173)
 ```
 
-Deploy the contents of `dist/` to any static host. Files must be served over HTTP(S), because the app uses ES modules. WebGL and hardware acceleration are required. No analytics or external data services are used.
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` / `npm run serve` | Vite development server with live updates |
+| `npm test` | Run the Vitest suite once |
+| `npm run test:watch` | Rerun tests as source files change |
+| `npm run check` | Check application, tests, and configuration with strict TypeScript |
+| `npm run build` | Type-check, then create the production build in `dist/` |
+| `npm run preview` | Serve the existing production build locally for verification |
+
+`index.html` is Vite's entry point and loads `src/app.ts`. Edit files in `src/`; `dist/` is generated output and is ignored by Git. Dependencies are locked in `package-lock.json` for reproducible installs.
+
+To deploy, run `npm run build` and upload `dist/` to a static host. `npm run preview` is a local check, not a production server. WebGL and hardware acceleration are required. No analytics or external data services are used.
 
 ## Explore
 
@@ -33,12 +43,14 @@ Surfaces are generated mathematically in a fragment shader. They suggest planeta
 
 ## Source
 
-- `dist/index.html`: accessible interface and navigation help
-- `dist/style.css`: responsive observatory interface
-- `dist/app.js`: WebGL renderer, procedural materials, camera and simulation controls
-- `dist/orbits.js`: planetary constants, scale conversion and Keplerian orbits
-- `tests/orbits.test.js`: orbital closure, extrema, solver accuracy, scale and finite-value checks
+- `index.html`: Vite HTML entry point, interface, and navigation help
+- `src/app.ts`: typed WebGL renderer, procedural materials, camera, and controls
+- `src/orbits.ts`: typed planetary data, scale conversion, and Keplerian orbits
+- `src/style.css`: responsive observatory interface
+- `tests/orbits.test.ts`: Vitest tests for orbital closure, extrema, solver accuracy, scale, and finite values
+- `vite.config.ts`: shared Vite and Vitest configuration
+- `tsconfig.json`: strict TypeScript settings; compilation is handled by Vite
 
 ## Verification
 
-Automated orbital tests and JavaScript syntax checks are included. Interactive browser QA was unavailable in the creation environment because its managed preview service was not running. Cross-device rendering, touch behavior, and GPU performance still need browser verification.
+All five Vitest orbital tests and the production build (including strict TypeScript checks) pass. Interactive browser QA remains unverified because the managed preview service is unavailable. Cross-device rendering, touch behavior, and GPU performance still need browser verification.
