@@ -30,6 +30,13 @@ try {
   assert.equal(await page.locator('#details').isVisible(),false);
   await page.locator('#planet-nav button').filter({hasText:'Earth'}).click();
   assert.equal(await page.locator('#info-toggle').innerText(),'Earth info');
+  assert.equal(await page.locator('#view-name').innerText(),'FOLLOWING EARTH');
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#view-name').innerText(),'FREE EXPLORATION');
+  await page.locator('#planet-nav button').filter({hasText:'Saturn'}).click();
+  assert.equal(await page.locator('#view-name').innerText(),'FOLLOWING SATURN');
+  await page.keyboard.press('r');
+  assert.equal(await page.locator('#view-name').innerText(),'SYSTEM OVERVIEW');
   await page.locator('#info-toggle').click();
   await page.keyboard.press('Escape');
   assert.equal(await page.locator('#details').isVisible(),false);
