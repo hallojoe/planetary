@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "description": "A WebGL solar system observatory built with TypeScript and Vite",
-  "engines": { "node": "^20.19.0 || >=22.12.0" },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
   "scripts": {
     "dev": "vite",
     "serve": "vite",
@@ -16,8 +18,12 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@types/three": "^0.187.0",
     "typescript": "^5.9.0",
     "vite": "^7.0.0",
     "vitest": "^4.0.0"
+  },
+  "dependencies": {
+    "three": "^0.187.0"
   }
 }
