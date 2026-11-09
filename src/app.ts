@@ -166,7 +166,7 @@ for (let i = 0; i < 1700; i++) {
     starI.push(i);
 }
 const stars = mesh(starV, starI, gl.POINTS);
-const state: SimulationState = { days: 0, speed: 10, paused: false, selected: 0, follow: null, mode: 0, style: 0, explore: true, orbits: true, labels: true, stars: true };
+const state: SimulationState = { days: 0, speed: 10, paused: false, selected: 0, follow: null, mode: 0, style: 0, explore: true, orbits: false, labels: false, stars: true };
 const camera: Camera = { yaw: .30, pitch: .67, distance: 130, target: [0, 0, 0] };
 let goal: CameraGoal | null = null;
 let eye: Vec3 = [0, 0, 0];
