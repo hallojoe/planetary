@@ -1,0 +1,23 @@
+name: Check mobile layout
+on:
+  push:
+    branches: [qa/mobile-panels]
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci && npm run build
+      - run: npm install --no-save --package-lock=false playwright-core
+      - name: Check mobile controls and capture the viewport
+        run: CHROME_BIN="$(command -v google-chrome)" node check-mobile.mjs
+      - name: Return screenshot
+        run: |
+          echo SNAPSHOT_START
+          base64 -w 120 planetary-mobile.jpg
+          echo SNAPSHOT_END
