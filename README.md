@@ -2,6 +2,10 @@
 
 An interactive 3D solar system built with WebGL and strict TypeScript. Vite serves and builds the application; Vitest runs the orbital tests. Includes the Sun, all eight planets, an illustrative Earth–Moon system, Saturn's rings, a deterministic star field, and sun-facing lighting. The browser application has no runtime package dependencies.
 
+<img src="docs/mobile-overview.jpg" width="300" alt="Planetary on a phone, showing the Sun and planetary orbits between the header and the planet selector." />
+
+On phones, tap **Observatory** to change the view or tap the **info** button for the selected body. Tap the sky or the close button to return to the planets.
+
 ## Develop, test, and build
 
 Requires Node.js 20.19+ within v20, or 22.12+ (Node.js 24 LTS recommended), and npm.
@@ -59,4 +63,4 @@ Surfaces are generated mathematically in a fragment shader. They suggest planeta
 
 ## Verification
 
-All five Vitest orbital tests and the production build (including strict TypeScript checks) pass. Interactive browser QA remains unverified because the managed preview service is unavailable. Cross-device rendering, touch behavior, and GPU performance still need browser verification.
+All five Vitest orbital tests and the production build (including strict TypeScript checks) pass. Chromium layout checks cover 320 × 568 and 390 × 844 portrait viewports, 844 × 390 landscape, and the desktop layout at 1366 × 900.

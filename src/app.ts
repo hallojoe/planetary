@@ -49,6 +49,22 @@ interface SimulationState {
     labels: boolean;
     stars: boolean;
 }
+// Native auto popovers allow one panel at a time and support Escape and light dismissal.
+const compactLayout = window.matchMedia('(max-width: 700px), (max-width: 950px) and (max-height: 500px)');
+function syncPanels() {
+    for (const id of ['details', 'observatory']) {
+        const panel = $(id);
+        if (panel.matches(':popover-open')) panel.hidePopover();
+        if (compactLayout.matches) panel.setAttribute('popover', 'auto');
+        else panel.removeAttribute('popover');
+    }
+}
+function dismissPanel(id: string) {
+    const panel = $(id);
+    if (panel.matches(':popover-open')) panel.hidePopover();
+}
+syncPanels();
+compactLayout.addEventListener('change', syncPanels);
 const canvas = $('universe');
 const context = canvas.getContext('webgl', { antialias: true, alpha: false });
 if (!context) {
@@ -180,11 +196,11 @@ function rebuild() { for (const m of orbitMeshes) {
 } return mesh(v, ind, gl.LINE_STRIP); }); radii = bodies.map(b => bodyRadius(b, state.explore)); }
 rebuild();
 const labels = bodies.map((b, i) => { const button = document.createElement('button'); button.className = 'planet-label'; button.textContent = b.name; button.addEventListener('click', () => select(i)); $('planet-labels').append(button); const nav = document.createElement('button'); nav.className = 'planet-button' + (i === 0 ? ' selected' : ''); nav.innerHTML = `<span class="planet-dot" style="background:${b.color}"></span><span>${b.name}</span>`; nav.setAttribute('aria-pressed', String(i === 0)); nav.onclick = () => select(i); $('planet-nav').append(nav); return button; });
-function select(i: number) { state.selected = i; const b = bodies[i]; $('body-name').textContent = b.name; $('body-type').textContent = b.type.toUpperCase(); $('body-index').textContent = String(i).padStart(2, '0') + ' / 08'; $('body-description').textContent = b.description; $('stat-one').innerHTML = b.radius.toLocaleString('en-US') + ' <small>km</small>'; $('stat-two-label').textContent = i ? 'ORBITAL PERIOD' : 'TEMPERATURE'; $('stat-two').innerHTML = i ? (b.period > 1000 ? (b.period / 365.25).toFixed(1) + ' <small>years</small>' : b.period.toFixed(1) + ' <small>days</small>') : '5,772 <small>K</small>'; $('focus').innerHTML = 'Explore the ' + (i ? '' : '') + b.name + ' <span>↗</span>'; [...$('planet-nav').children].forEach((el, j) => { el.classList.toggle('selected', j === i); el.setAttribute('aria-pressed', String(j === i)); }); labels.forEach((el, j) => el.classList.toggle('selected', j === i)); }
+function select(i: number) { state.selected = i; const b = bodies[i]; $('info-toggle').textContent = b.name + ' info'; $('body-name').textContent = b.name; $('body-type').textContent = b.type.toUpperCase(); $('body-index').textContent = String(i).padStart(2, '0') + ' / 08'; $('body-description').textContent = b.description; $('stat-one').innerHTML = b.radius.toLocaleString('en-US') + ' <small>km</small>'; $('stat-two-label').textContent = i ? 'ORBITAL PERIOD' : 'TEMPERATURE'; $('stat-two').innerHTML = i ? (b.period > 1000 ? (b.period / 365.25).toFixed(1) + ' <small>years</small>' : b.period.toFixed(1) + ' <small>days</small>') : '5,772 <small>K</small>'; $('focus').innerHTML = 'Explore the ' + (i ? '' : '') + b.name + ' <span>↗</span>'; [...$('planet-nav').children].forEach((el, j) => { el.classList.toggle('selected', j === i); el.setAttribute('aria-pressed', String(j === i)); }); labels.forEach((el, j) => el.classList.toggle('selected', j === i)); }
 function focus(i: number) { state.follow = i; goal = { distance: radii[i] * (i === 6 ? 9 : 7), pitch: .30 }; $('view-name').textContent = 'FOLLOWING ' + bodies[i].name.toUpperCase(); }
 function overview() { state.follow = null; goal = { distance: state.explore ? 130 : 1200, pitch: .67 }; camera.yaw = .30; $('view-name').textContent = 'SYSTEM OVERVIEW'; }
-$('focus').onclick = () => focus(state.selected);
-$('reset').onclick = overview;
+$('focus').onclick = () => { dismissPanel('details'); focus(state.selected); };
+$('reset').onclick = () => { dismissPanel('observatory'); overview(); };
 $('modes').onclick = e => { const target = e.target; if (!(target instanceof HTMLButtonElement))
     return; const mode = target.dataset.mode; if (mode !== 'texture' && mode !== 'shaded' && mode !== 'wire')
     return; const modes: Record<string, RenderMode> = { texture: 0, shaded: 1, wire: 2 }; state.mode = modes[mode]; [...$('modes').children].forEach(el => { el.classList.toggle('active', el === e.target); el.setAttribute('aria-pressed', String(el === e.target)); }); $('texture').disabled = state.mode !== 0; $('texture-field').style.opacity = state.mode === 0 ? '1' : '.4'; };
