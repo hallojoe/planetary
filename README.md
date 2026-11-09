@@ -39,7 +39,7 @@ Pages must use **GitHub Actions** as its publishing source. The Vite configurati
 
 - Drag to orbit; scroll to zoom; right-drag or Shift-drag to pan.
 - On touch devices, use one finger to orbit and two fingers to pan or pinch to zoom.
-- Select a body in the bottom navigation, then choose **Explore** to follow it. Double-click a body's location to focus it directly.
+- Select a body in the bottom navigation to center the camera on it, zoom in, and follow it as it orbits. Double-click a body's location to focus it directly.
 - Use W/A/S/D to move horizontally, Q/E to move down/up, Escape to leave follow mode, R to return to the overview, and Space to pause.
 - Adjust time warp from 0.01 to 1,000 simulation days per real second. Reset time returns to J2000 (January 1, 2000, 12:00 UTC).
 - Choose **Textured**, **Shaded**, or **Wireframe**. Textured mode offers **Natural** and **Atlas** procedural surfaces.

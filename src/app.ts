@@ -195,7 +195,24 @@ function rebuild() { for (const m of orbitMeshes) {
     ind.push(k);
 } return mesh(v, ind, gl.LINE_STRIP); }); radii = bodies.map(b => bodyRadius(b, state.explore)); }
 rebuild();
-const labels = bodies.map((b, i) => { const button = document.createElement('button'); button.className = 'planet-label'; button.textContent = b.name; button.addEventListener('click', () => select(i)); $('planet-labels').append(button); const nav = document.createElement('button'); nav.className = 'planet-button' + (i === 0 ? ' selected' : ''); nav.innerHTML = `<span class="planet-dot" style="background:${b.color}"></span><span>${b.name}</span>`; nav.setAttribute('aria-pressed', String(i === 0)); nav.onclick = () => select(i); $('planet-nav').append(nav); return button; });
+const labels = bodies.map((body, index) => {
+    const label = document.createElement('button');
+    label.className = 'planet-label';
+    label.textContent = body.name;
+    label.addEventListener('click', () => select(index));
+    $('planet-labels').append(label);
+
+    const nav = document.createElement('button');
+    nav.className = 'planet-button' + (index === 0 ? ' selected' : '');
+    nav.innerHTML = `<span class="planet-dot" style="background:${body.color}"></span><span>${body.name}</span>`;
+    nav.setAttribute('aria-pressed', String(index === 0));
+    nav.onclick = () => {
+        select(index);
+        focus(index);
+    };
+    $('planet-nav').append(nav);
+    return label;
+});
 function select(i: number) { state.selected = i; const b = bodies[i]; $('info-toggle').textContent = b.name + ' info'; $('body-name').textContent = b.name; $('body-type').textContent = b.type.toUpperCase(); $('body-index').textContent = String(i).padStart(2, '0') + ' / 08'; $('body-description').textContent = b.description; $('stat-one').innerHTML = b.radius.toLocaleString('en-US') + ' <small>km</small>'; $('stat-two-label').textContent = i ? 'ORBITAL PERIOD' : 'TEMPERATURE'; $('stat-two').innerHTML = i ? (b.period > 1000 ? (b.period / 365.25).toFixed(1) + ' <small>years</small>' : b.period.toFixed(1) + ' <small>days</small>') : '5,772 <small>K</small>'; $('focus').innerHTML = 'Explore the ' + (i ? '' : '') + b.name + ' <span>↗</span>'; [...$('planet-nav').children].forEach((el, j) => { el.classList.toggle('selected', j === i); el.setAttribute('aria-pressed', String(j === i)); }); labels.forEach((el, j) => el.classList.toggle('selected', j === i)); }
 function focus(i: number) { state.follow = i; goal = { distance: radii[i] * (i === 6 ? 9 : 7), pitch: .30 }; $('view-name').textContent = 'FOLLOWING ' + bodies[i].name.toUpperCase(); }
 function overview() { state.follow = null; goal = { distance: state.explore ? 130 : 1200, pitch: .67 }; camera.yaw = .30; $('view-name').textContent = 'SYSTEM OVERVIEW'; }
@@ -270,8 +287,12 @@ canvas.addEventListener('dblclick', e => { let nearest = -1, best = 40; position
     focus(nearest);
 } });
 const keys = new Set<string>();
-window.addEventListener('keydown', e => { if (['INPUT', 'SELECT', 'BUTTON'].includes(document.activeElement?.tagName ?? '') || $('help-dialog').open)
-    return; const k = e.key.toLowerCase(); if (k === ' ') {
+window.addEventListener('keydown', e => {
+    const k = e.key.toLowerCase();
+    const navShortcut = $('planet-nav').contains(document.activeElement) && (k === 'escape' || k === 'r');
+    const controlFocused = ['INPUT', 'SELECT', 'BUTTON'].includes(document.activeElement?.tagName ?? '');
+    if ($('help-dialog').open || (controlFocused && !navShortcut)) return;
+    if (k === ' ') {
     e.preventDefault();
     pause();
 } if (k === 'r')
@@ -305,8 +326,8 @@ function frame(now: number) {
     }
     positions = bodies.map(b => orbitPosition(b, state.days, state.explore));
     if (state.follow !== null) {
-        const target = positions[state.follow];
-        camera.target = goal ? add(camera.target, mul(sub(target, camera.target), Math.min(1, dt * 6))) : [...target];
+        // Track the current position throughout the zoom, even at high time warp.
+        camera.target = [...positions[state.follow]];
     }
     else if (goal)
         camera.target = add(camera.target, mul(camera.target, -Math.min(1, dt * 5)));
