@@ -1,7 +1,10 @@
+import { turtleGeometry } from './turtles';
 import { bodies, orbitPosition, bodyRadius, AU_KM } from './orbits';
 import type { Vec3 } from './orbits';
 import './style.css';
 interface ElementMap {
+    turtles: HTMLInputElement;
+    interior: HTMLDetailsElement;
     universe: HTMLCanvasElement;
     texture: HTMLSelectElement;
     scale: HTMLSelectElement;
@@ -84,6 +87,7 @@ float hash(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}
 float noise(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(mix(hash(i),hash(i+vec3(1,0,0)),f.x),mix(hash(i+vec3(0,1,0)),hash(i+vec3(1,1,0)),f.x),f.y),mix(mix(hash(i+vec3(0,0,1)),hash(i+vec3(1,0,1)),f.x),mix(hash(i+vec3(0,1,1)),hash(i+vec3(1,1,1)),f.x),f.y),f.z);}
 float fbm(vec3 p){return .5*noise(p)+.25*noise(p*2.03)+.125*noise(p*4.07)+.0625*noise(p*8.11);}
 void main(){
+if(uKind==12.){vec3 shell=mix(vec3(.055,.18,.12),vec3(.56,.77,.34),vUV.x);float lit=.52+.48*max(0.,dot(normalize(vNormal),normalize(vec3(.3,.9,.4))));gl_FragColor=vec4(shell*lit,1.);return;}
 if(uKind<0.){gl_FragColor=vec4(uColor,uAlpha);return;}
 vec3 n=normalize(vNormal);vec3 view=normalize(uCamera-vWorld);
 if(uKind>19.){float f=pow(max(0.,1.-abs(dot(n,view))),2.8);gl_FragColor=vec4(uColor,f*uAlpha);return;}
@@ -166,6 +170,33 @@ for (let i = 0; i < 1700; i++) {
     starI.push(i);
 }
 const stars = mesh(starV, starI, gl.POINTS);
+let worldTurtle: Mesh | undefined;
+function drawWorldTurtles() {
+    if (!$('turtles').checked) return;
+    if (!worldTurtle) {
+        const geometry = turtleGeometry();
+        worldTurtle = mesh(geometry.vertices, geometry.indices);
+    }
+    const earth = positions[3];
+    let size = radii[3];
+    let top = earth[1] - size;
+    for (let level = 0; level < 8; level++) {
+        const y = top - size * .54;
+        draw(worldTurtle, [earth[0], y, earth[2]], size, [1,1,1], 12, level * .52);
+        top = y - size * .35;
+        size *= .88;
+    }
+}
+$('turtles').onchange = () => { $('myth-note').hidden = !$('turtles').checked; };
+
+async function updateInterior() {
+    const name = bodies[state.selected].name;
+    $('interior-title').textContent = 'Inside ' + (name === 'Sun' ? 'the Sun' : name);
+    if (!$('interior').open) return;
+    const { renderCutaway } = await import('./cutaway');
+    if ($('interior').open && bodies[state.selected].name === name) renderCutaway(name, $('cutaway'));
+}
+$('interior').addEventListener('toggle', updateInterior);
 const state: SimulationState = { days: 0, speed: 10, paused: false, selected: 0, follow: null, mode: 0, style: 0, explore: true, orbits: false, labels: false, stars: true };
 const camera: Camera = { yaw: .30, pitch: .67, distance: 130, target: [0, 0, 0] };
 let goal: CameraGoal | null = null;
@@ -213,7 +244,7 @@ const labels = bodies.map((body, index) => {
     $('planet-nav').append(nav);
     return label;
 });
-function select(i: number) { state.selected = i; const b = bodies[i]; $('info-toggle').textContent = b.name + ' info'; $('body-name').textContent = b.name; $('body-type').textContent = b.type.toUpperCase(); $('body-index').textContent = String(i).padStart(2, '0') + ' / 08'; $('body-description').textContent = b.description; $('stat-one').innerHTML = b.radius.toLocaleString('en-US') + ' <small>km</small>'; $('stat-two-label').textContent = i ? 'ORBITAL PERIOD' : 'TEMPERATURE'; $('stat-two').innerHTML = i ? (b.period > 1000 ? (b.period / 365.25).toFixed(1) + ' <small>years</small>' : b.period.toFixed(1) + ' <small>days</small>') : '5,772 <small>K</small>'; $('focus').innerHTML = 'Explore the ' + (i ? '' : '') + b.name + ' <span>↗</span>'; [...$('planet-nav').children].forEach((el, j) => { el.classList.toggle('selected', j === i); el.setAttribute('aria-pressed', String(j === i)); }); labels.forEach((el, j) => el.classList.toggle('selected', j === i)); }
+function select(i: number) { state.selected = i; void updateInterior(); const b = bodies[i]; $('info-toggle').textContent = b.name + ' info'; $('body-name').textContent = b.name; $('body-type').textContent = b.type.toUpperCase(); $('body-index').textContent = String(i).padStart(2, '0') + ' / 08'; $('body-description').textContent = b.description; $('stat-one').innerHTML = b.radius.toLocaleString('en-US') + ' <small>km</small>'; $('stat-two-label').textContent = i ? 'ORBITAL PERIOD' : 'TEMPERATURE'; $('stat-two').innerHTML = i ? (b.period > 1000 ? (b.period / 365.25).toFixed(1) + ' <small>years</small>' : b.period.toFixed(1) + ' <small>days</small>') : '5,772 <small>K</small>'; $('focus').innerHTML = 'Explore the ' + (i ? '' : '') + b.name + ' <span>↗</span>'; [...$('planet-nav').children].forEach((el, j) => { el.classList.toggle('selected', j === i); el.setAttribute('aria-pressed', String(j === i)); }); labels.forEach((el, j) => el.classList.toggle('selected', j === i)); }
 function focus(i: number) { state.follow = i; goal = { distance: radii[i] * (i === 6 ? 9 : 7), pitch: .30 }; $('view-name').textContent = 'FOLLOWING ' + bodies[i].name.toUpperCase(); }
 function overview() { state.follow = null; goal = { distance: state.explore ? 130 : 1200, pitch: .67 }; camera.yaw = .30; $('view-name').textContent = 'SYSTEM OVERVIEW'; }
 $('focus').onclick = () => { dismissPanel('details'); focus(state.selected); };
@@ -366,6 +397,7 @@ function frame(now: number) {
         orbitMeshes.forEach((m, i) => draw(m, [0, 0, 0], 1, i + 1 === state.selected ? [.35, .56, .51] : [.20, .28, .35], -1, 0, 0, i + 1 === state.selected ? .65 : .42));
     bodies.forEach((b, i) => { const tilt = b.tilt * Math.PI / 180; draw(state.mode === 2 ? wireSphere : sphere, positions[i], radii[i], hex(b.color), i, state.days / b.rotation * Math.PI * 2, tilt); if (i === 6)
         draw(state.mode === 2 ? ringWire : ring, positions[i], radii[i], hex('#cbbb96'), state.mode === 2 ? -1 : 10, 0, tilt, .85); });
+    drawWorldTurtles();
     // Moon: mean circular orbit with a 5.145 degree inclination, illustrative phase.
     const moonDistance = state.explore ? 2.1 : 384400 / AU_KM * 20, moonAngle = state.days / 27.32166 * Math.PI * 2;
     const moonPosition = add(positions[3], [Math.cos(moonAngle) * moonDistance, Math.sin(moonAngle) * moonDistance * .0897, Math.sin(moonAngle) * moonDistance * .996]);

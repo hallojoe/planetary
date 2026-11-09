@@ -45,5 +45,21 @@ try {
   assert.equal(await page.locator('#observatory').isVisible(),false);
   console.log('Verified',w,h);
  }
+ await page.setViewportSize({width:1366,height:900});
+ await page.locator('#details').waitFor();
+ await page.locator('#interior-title').click();
+ for (const name of ['Sun','Mercury','Venus','Earth','Mars','Jupiter','Saturn','Uranus','Neptune']) {
+  await page.locator('#planet-nav button').filter({hasText:name}).click();
+  await page.locator('#cutaway svg[aria-label^="'+name+' "] path').first().waitFor({state:'attached'});
+  assert.ok(await page.locator('#cutaway dt').count()>=3);
+ }
+ await page.locator('#planet-nav button').filter({hasText:'Earth'}).click();
+ await page.locator('#cutaway svg[aria-label^="Earth "]').waitFor();
+ assert.equal(await page.locator('#turtles').isChecked(),false);
+ await page.locator('#turtles').check();
+ await page.locator('#myth-note').waitFor();
+ await page.waitForTimeout(2000);
+ await page.screenshot({path:'planetary-mobile.jpg',quality:80});
+ await page.locator('#turtles').uncheck();
  assert.deepEqual(errors,[]);console.log('WebGL initialization, mobile panels, desktop layout verified');
 }finally{await browser.close();}

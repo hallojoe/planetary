@@ -1,6 +1,6 @@
 # Planetary
 
-An interactive 3D solar system built with WebGL and strict TypeScript. Vite serves and builds the application; Vitest runs the orbital tests. Includes the Sun, all eight planets, an illustrative Earth–Moon system, Saturn's rings, a deterministic star field, and sun-facing lighting. The browser application has no runtime package dependencies.
+An interactive 3D solar system built with WebGL and strict TypeScript. Vite serves and builds the application; Vitest runs the orbital tests. Includes the Sun, all eight planets, an illustrative Earth–Moon system, Saturn's rings, a deterministic star field, and sun-facing lighting. Planet interiors use a Three.js cutaway with a quarter wedge removed. Open **Inside** in the info panel for a schematic and a NASA source. Enable **Turtles all the way down** in Observatory to see eight world turtles beneath Earth.
 
 <img src="docs/mobile-overview.jpg" width="300" alt="Planetary on a phone, showing the Sun and planetary orbits between the header and the planet selector." />
 
