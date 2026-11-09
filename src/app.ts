@@ -197,7 +197,12 @@ async function updateInterior() {
     if ($('interior').open && bodies[state.selected].name === name) renderCutaway(name, $('cutaway'));
 }
 $('interior').addEventListener('toggle', updateInterior);
-const state: SimulationState = { days: 0, speed: 10, paused: false, selected: 0, follow: null, mode: 0, style: 0, explore: true, orbits: false, labels: false, stars: true };
+function selectedSpeed(): number {
+    const exponent = $('speed').valueAsNumber;
+    // Give the quarter-day setting an exact value on the logarithmic slider.
+    return exponent === -0.6 ? 0.25 : 10 ** exponent;
+}
+const state: SimulationState = { days: 0, speed: selectedSpeed(), paused: false, selected: 0, follow: null, mode: 0, style: 0, explore: true, orbits: false, labels: false, stars: true };
 const camera: Camera = { yaw: .30, pitch: .67, distance: 130, target: [0, 0, 0] };
 let goal: CameraGoal | null = null;
 let eye: Vec3 = [0, 0, 0];
@@ -258,7 +263,7 @@ for (const id of ['orbits', 'labels', 'stars'] as const)
 $('scale').onchange = e => { state.explore = (e.currentTarget as HTMLInputElement | HTMLSelectElement).value === 'explore'; rebuild(); $('scale-note').textContent = state.explore ? 'Distances compressed. Planet sizes enlarged for discovery.' : 'Physical sizes and distances. Use Explore to approach a planet.'; $('scale-status').textContent = state.explore ? 'EXPLORATION SCALE' : 'TRUE SCALE'; overview(); };
 function pause() { state.paused = !state.paused; $('pause').textContent = state.paused ? '▶' : 'Ⅱ'; $('pause').setAttribute('aria-label', state.paused ? 'Resume simulation' : 'Pause simulation'); }
 $('pause').onclick = pause;
-$('speed').oninput = e => { state.speed = 10 ** +(e.currentTarget as HTMLInputElement | HTMLSelectElement).value; $('speed-value').textContent = state.speed.toLocaleString('en-US', { maximumFractionDigits: 2 }) + ' days / sec'; };
+$('speed').oninput = () => { state.speed = selectedSpeed(); $('speed-value').textContent = state.speed.toLocaleString('en-US', { maximumFractionDigits: 2 }) + ' days / sec'; };
 $('epoch').onclick = () => state.days = 0;
 $('help').onclick = () => $('help-dialog').showModal();
 $('close-help').onclick = () => $('help-dialog').close();
