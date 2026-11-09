@@ -16,8 +16,8 @@ try {
  for(const [w,h] of [[390,844],[320,568],[844,390],[1366,900]]){
   await page.setViewportSize({width:w,height:h});
   const compact=w<701||h<=500;
-  assert.equal(await page.locator('#details').isVisible(),!compact);
-  assert.equal(await page.locator('#observatory').isVisible(),!compact);
+  await page.locator('#details').waitFor({state:compact?'hidden':'visible',timeout:6000});
+  await page.locator('#observatory').waitFor({state:compact?'hidden':'visible',timeout:6000});
   if(!compact)continue;
   if(w===390)await page.screenshot({path:resolve('planetary-mobile.jpg'),quality:88});
   assert.equal(await page.evaluate(()=>document.elementFromPoint(innerWidth/2,innerHeight/2)?.id),'universe');
