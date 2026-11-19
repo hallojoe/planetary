@@ -1,3 +1,4 @@
+import { t } from './i18n';
 import { AmbientLight, DirectionalLight, DoubleSide, Group, Mesh, MeshLambertMaterial, OrthographicCamera, RingGeometry, Scene, SphereGeometry } from 'three';
 import { SVGRenderer } from 'three/addons/renderers/SVGRenderer.js';
 import { interiors } from './interiors';
@@ -35,22 +36,23 @@ export function renderCutaway(name: string, host: HTMLElement) {
   renderer.render(scene,camera);
   const svg = renderer.domElement;
   svg.setAttribute('role','img');
-  svg.setAttribute('aria-label',name+' cutaway with one quarter removed');
+  svg.setAttribute('aria-label',t('{name} cutaway with one quarter removed', { name: t(name) }));
   const list = document.createElement('dl');
   for (const [label, material,, color] of layers) {
     const term = document.createElement('dt');
     term.style.setProperty('--layer-color',color);
-    term.textContent = label;
+    term.textContent = t(label);
     const desc = document.createElement('dd');
-    desc.textContent = material;
+    desc.textContent = t(material);
     list.append(term,desc);
   }
   const caption = document.createElement('small');
-  caption.textContent = 'Schematic • layer thicknesses exaggerated';
+  caption.textContent = t('Schematic • layer thicknesses exaggerated');
   const explanation = document.createElement('p');
-  explanation.textContent = note;
+  explanation.textContent = t(note);
   const link = document.createElement('a');
   link.href = 'https://science.nasa.gov/'+name.toLowerCase()+'/facts/';
-  link.textContent = 'NASA · '+name+' facts';
+  link.textContent = t('NASA · {name} facts', { name: t(name) });
   host.replaceChildren(svg,caption,list,explanation,link);
 }
+

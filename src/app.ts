@@ -1,3 +1,4 @@
+import { initLanguage, t, getLanguage, formatNumber, formatDate } from './i18n';
 import { turtleGeometry } from './turtles';
 import { bodies, orbitPosition, bodyRadius, AU_KM } from './orbits';
 import type { Vec3 } from './orbits';
@@ -68,11 +69,13 @@ function dismissPanel(id: string) {
 }
 syncPanels();
 compactLayout.addEventListener('change', syncPanels);
+initLanguage();
 const canvas = $('universe');
 const context = canvas.getContext('webgl', { antialias: true, alpha: false });
 if (!context) {
     $('error').hidden = false;
-    $('error').textContent = 'This explorer needs WebGL. Please enable hardware acceleration or try another browser.';
+    $('error').setAttribute('data-i18n', 'This explorer needs WebGL. Please enable hardware acceleration or try another browser.');
+    $('error').textContent = t('This explorer needs WebGL. Please enable hardware acceleration or try another browser.');
     throw new Error('WebGL unavailable');
 }
 const gl: WebGLRenderingContext = context;
@@ -125,7 +128,8 @@ try {
 }
 catch (e) {
     $('error').hidden = false;
-    $('error').textContent = 'The 3D renderer could not start on this device.';
+    $('error').setAttribute('data-i18n', 'The 3D renderer could not start on this device.');
+    $('error').textContent = t('The 3D renderer could not start on this device.');
     throw e;
 }
 gl.useProgram(program);
@@ -191,7 +195,7 @@ $('turtles').onchange = () => { $('myth-note').hidden = !$('turtles').checked; }
 
 async function updateInterior() {
     const name = bodies[state.selected].name;
-    $('interior-title').textContent = 'Inside ' + (name === 'Sun' ? 'the Sun' : name);
+    $('interior-title').textContent = t('Interior: {name}', { name: t(name) });
     if (!$('interior').open) return;
     const { renderCutaway } = await import('./cutaway');
     if ($('interior').open && bodies[state.selected].name === name) renderCutaway(name, $('cutaway'));
@@ -234,13 +238,13 @@ rebuild();
 const labels = bodies.map((body, index) => {
     const label = document.createElement('button');
     label.className = 'planet-label';
-    label.textContent = body.name;
+    label.textContent = t(body.name);
     label.addEventListener('click', () => select(index));
     $('planet-labels').append(label);
 
     const nav = document.createElement('button');
     nav.className = 'planet-button' + (index === 0 ? ' selected' : '');
-    nav.innerHTML = `<span class="planet-dot" style="background:${body.color}"></span><span>${body.name}</span>`;
+    nav.innerHTML = `<span class="planet-dot" style="background:${body.color}"></span><span>${t(body.name)}</span>`;
     nav.setAttribute('aria-pressed', String(index === 0));
     nav.onclick = () => {
         select(index);
@@ -249,9 +253,54 @@ const labels = bodies.map((body, index) => {
     $('planet-nav').append(nav);
     return label;
 });
-function select(i: number) { state.selected = i; void updateInterior(); const b = bodies[i]; $('info-toggle').textContent = b.name + ' info'; $('body-name').textContent = b.name; $('body-type').textContent = b.type.toUpperCase(); $('body-index').textContent = String(i).padStart(2, '0') + ' / 08'; $('body-description').textContent = b.description; $('stat-one').innerHTML = b.radius.toLocaleString('en-US') + ' <small>km</small>'; $('stat-two-label').textContent = i ? 'ORBITAL PERIOD' : 'TEMPERATURE'; $('stat-two').innerHTML = i ? (b.period > 1000 ? (b.period / 365.25).toFixed(1) + ' <small>years</small>' : b.period.toFixed(1) + ' <small>days</small>') : '5,772 <small>K</small>'; $('focus').innerHTML = 'Explore the ' + (i ? '' : '') + b.name + ' <span>↗</span>'; [...$('planet-nav').children].forEach((el, j) => { el.classList.toggle('selected', j === i); el.setAttribute('aria-pressed', String(j === i)); }); labels.forEach((el, j) => el.classList.toggle('selected', j === i)); }
-function focus(i: number) { state.follow = i; goal = { distance: radii[i] * (i === 6 ? 9 : 7), pitch: .30 }; $('view-name').textContent = 'FOLLOWING ' + bodies[i].name.toUpperCase(); }
-function overview() { state.follow = null; goal = { distance: state.explore ? 130 : 1200, pitch: .67 }; camera.yaw = .30; $('view-name').textContent = 'SYSTEM OVERVIEW'; }
+function select(i: number) {
+    state.selected = i;
+    void updateInterior();
+    const b = bodies[i], name = t(b.name);
+    $('info-toggle').textContent = t('{name} info', { name });
+    $('body-name').textContent = name;
+    $('body-type').textContent = t(b.type).toLocaleUpperCase(getLanguage());
+    $('body-index').textContent = String(i).padStart(2, '0') + ' / 08';
+    $('body-description').textContent = t(b.description);
+    $('stat-one').innerHTML = formatNumber(b.radius) + ' <small>km</small>';
+    $('stat-two-label').textContent = t(i ? 'ORBITAL PERIOD' : 'TEMPERATURE');
+    $('stat-two').innerHTML = i
+        ? formatNumber(b.period > 1000 ? b.period / 365.25 : b.period, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' <small>' + t(b.period > 1000 ? 'years' : 'days') + '</small>'
+        : formatNumber(5772) + ' <small>K</small>';
+    $('focus').textContent = t('Explore: {name}', { name });
+    const icon = document.createElement('span');
+    icon.textContent = '↗';
+    $('focus').append(icon);
+    [...$('planet-nav').children].forEach((el, j) => { el.classList.toggle('selected', j === i); el.setAttribute('aria-pressed', String(j === i)); });
+    labels.forEach((el, j) => el.classList.toggle('selected', j === i));
+}
+let viewMode: 'overview' | 'following' | 'free' = 'overview';
+function updateViewStatus() {
+    $('view-name').textContent = viewMode === 'following' && state.follow !== null
+        ? t('FOLLOWING {name}', { name: t(bodies[state.follow].name).toLocaleUpperCase(getLanguage()) })
+        : t(viewMode === 'overview' ? 'SYSTEM OVERVIEW' : 'FREE EXPLORATION');
+}
+function focus(i: number) { state.follow = i; goal = { distance: radii[i] * (i === 6 ? 9 : 7), pitch: .30 }; viewMode = 'following'; updateViewStatus(); }
+function overview() { state.follow = null; goal = { distance: state.explore ? 130 : 1200, pitch: .67 }; camera.yaw = .30; viewMode = 'overview'; updateViewStatus(); }
+function updateScaleText() {
+    $('scale-note').textContent = t(state.explore ? 'Distances compressed. Planet sizes enlarged for discovery.' : 'Physical sizes and distances. Use Explore to approach a planet.');
+    $('scale-status').textContent = t(state.explore ? 'EXPLORATION SCALE' : 'TRUE SCALE');
+}
+function updatePauseLabel() { $('pause').setAttribute('aria-label', t(state.paused ? 'Resume simulation' : 'Pause simulation')); }
+function updateSpeedText() { $('speed-value').textContent = t('{value} days / sec', { value: formatNumber(state.speed, { maximumFractionDigits: 2 }) }); }
+function updateDate() { $('date').textContent = formatDate(new Date(Date.UTC(2000, 0, 1, 12) + state.days * 86400000)); }
+function refreshLanguage() {
+    select(state.selected);
+    labels.forEach((label, i) => label.textContent = t(bodies[i].name));
+    [...$('planet-nav').children].forEach((button, i) => { button.lastElementChild!.textContent = t(bodies[i].name); });
+    updateViewStatus();
+    updateScaleText();
+    updatePauseLabel();
+    updateSpeedText();
+    updateDate();
+}
+window.addEventListener('languagechange', refreshLanguage);
+refreshLanguage();
 $('focus').onclick = () => { dismissPanel('details'); focus(state.selected); };
 $('reset').onclick = () => { dismissPanel('observatory'); overview(); };
 $('modes').onclick = e => { const target = e.target; if (!(target instanceof HTMLButtonElement))
@@ -260,10 +309,10 @@ $('modes').onclick = e => { const target = e.target; if (!(target instanceof HTM
 $('texture').onchange = e => state.style = +(e.currentTarget as HTMLInputElement | HTMLSelectElement).value;
 for (const id of ['orbits', 'labels', 'stars'] as const)
     $(id).onchange = e => state[id] = (e.currentTarget as HTMLInputElement).checked;
-$('scale').onchange = e => { state.explore = (e.currentTarget as HTMLInputElement | HTMLSelectElement).value === 'explore'; rebuild(); $('scale-note').textContent = state.explore ? 'Distances compressed. Planet sizes enlarged for discovery.' : 'Physical sizes and distances. Use Explore to approach a planet.'; $('scale-status').textContent = state.explore ? 'EXPLORATION SCALE' : 'TRUE SCALE'; overview(); };
-function pause() { state.paused = !state.paused; $('pause').textContent = state.paused ? '▶' : 'Ⅱ'; $('pause').setAttribute('aria-label', state.paused ? 'Resume simulation' : 'Pause simulation'); }
+$('scale').onchange = e => { state.explore = (e.currentTarget as HTMLInputElement | HTMLSelectElement).value === 'explore'; rebuild(); updateScaleText(); overview(); };
+function pause() { state.paused = !state.paused; $('pause').textContent = state.paused ? '▶' : 'Ⅱ'; updatePauseLabel(); }
 $('pause').onclick = pause;
-$('speed').oninput = () => { state.speed = selectedSpeed(); $('speed-value').textContent = state.speed.toLocaleString('en-US', { maximumFractionDigits: 2 }) + ' days / sec'; };
+$('speed').oninput = () => { state.speed = selectedSpeed(); updateSpeedText(); };
 $('epoch').onclick = () => state.days = 0;
 $('help').onclick = () => $('help-dialog').showModal();
 $('close-help').onclick = () => $('help-dialog').close();
@@ -286,7 +335,7 @@ let lastPinch: {
 let moveDistance = 0;
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 canvas.addEventListener('pointerdown', e => { canvas.focus(); canvas.setPointerCapture(e.pointerId); pointers.set(e.pointerId, [e.clientX, e.clientY]); dragging = { x: e.clientX, y: e.clientY, pan: e.button === 2 || e.shiftKey }; goal = null; moveDistance = 0; });
-function pan(dx: number, dy: number) { const factor = camera.distance * .0015; const right: Vec3 = [Math.cos(camera.yaw), 0, -Math.sin(camera.yaw)], up: Vec3 = [-Math.sin(camera.yaw) * Math.sin(camera.pitch), Math.cos(camera.pitch), -Math.cos(camera.yaw) * Math.sin(camera.pitch)]; camera.target = add(camera.target, add(mul(right, -dx * factor), mul(up, dy * factor))); state.follow = null; $('view-name').textContent = 'FREE EXPLORATION'; }
+function pan(dx: number, dy: number) { const factor = camera.distance * .0015; const right: Vec3 = [Math.cos(camera.yaw), 0, -Math.sin(camera.yaw)], up: Vec3 = [-Math.sin(camera.yaw) * Math.sin(camera.pitch), Math.cos(camera.pitch), -Math.cos(camera.yaw) * Math.sin(camera.pitch)]; camera.target = add(camera.target, add(mul(right, -dx * factor), mul(up, dy * factor))); state.follow = null; viewMode = 'free'; updateViewStatus(); }
 canvas.addEventListener('pointermove', e => { if (!pointers.has(e.pointerId) || !dragging)
     return; pointers.set(e.pointerId, [e.clientX, e.clientY]); const dx = e.clientX - dragging.x, dy = e.clientY - dragging.y; moveDistance += Math.abs(dx) + Math.abs(dy); if (pointers.size === 2) {
     const [a, b] = [...pointers.values()], distance = Math.hypot(a[0] - b[0], a[1] - b[1]), mid: [
@@ -327,7 +376,7 @@ window.addEventListener('keydown', e => {
     const k = e.key.toLowerCase();
     const navShortcut = $('planet-nav').contains(document.activeElement) && (k === 'escape' || k === 'r');
     const controlFocused = ['INPUT', 'SELECT', 'BUTTON'].includes(document.activeElement?.tagName ?? '');
-    if ($('help-dialog').open || (controlFocused && !navShortcut)) return;
+    if ($('help-dialog').open || document.querySelector(':popover-open') || (controlFocused && !navShortcut)) return;
     if (k === ' ') {
     e.preventDefault();
     pause();
@@ -335,7 +384,7 @@ window.addEventListener('keydown', e => {
     overview(); if (k === 'escape') {
     state.follow = null;
     goal = null;
-    $('view-name').textContent = 'FREE EXPLORATION';
+    viewMode = 'free'; updateViewStatus();
 } if ('wasdqe'.includes(k) && k.length === 1) {
     keys.add(k);
     e.preventDefault();
@@ -376,7 +425,7 @@ function frame(now: number) {
     if (keys.size) {
         goal = null;
         state.follow = null;
-        $('view-name').textContent = 'FREE EXPLORATION';
+        viewMode = 'free'; updateViewStatus();
         const s = dt * camera.distance * .6;
         const forward: Vec3 = [-Math.sin(camera.yaw), 0, -Math.cos(camera.yaw)], right: Vec3 = [Math.cos(camera.yaw), 0, -Math.sin(camera.yaw)];
         camera.target = add(camera.target, add(mul(forward, s * ((keys.has('w') ? 1 : 0) - (keys.has('s') ? 1 : 0))), add(mul(right, s * ((keys.has('d') ? 1 : 0) - (keys.has('a') ? 1 : 0))), [0, s * ((keys.has('e') ? 1 : 0) - (keys.has('q') ? 1 : 0)), 0])));
@@ -423,10 +472,10 @@ function frame(now: number) {
         el.style.transform = `translate(${p[0] + offset}px,${p[1] - 7}px)`;
     } });
     if (now - dateTick > 180) {
-        const date = new Date(Date.UTC(2000, 0, 1, 12) + state.days * 86400000);
-        $('date').textContent = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' }).toUpperCase();
+        updateDate();
         dateTick = now;
     }
     requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+
