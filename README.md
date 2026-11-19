@@ -1,10 +1,14 @@
 # Planetary
 
-An interactive 3D solar system built with WebGL and strict TypeScript. Vite serves and builds the application; Vitest runs the orbital tests. Includes the Sun, all eight planets, an illustrative Earth–Moon system, Saturn's rings, a deterministic star field, and sun-facing lighting. Planet interiors use a Three.js cutaway with a quarter wedge removed. Open **Inside** in the info panel for a schematic and a NASA source. Enable **Turtles all the way down** in Observatory to see eight world turtles beneath Earth.
+An interactive 3D solar system built with WebGL and strict TypeScript. Vite serves and builds the application; Vitest runs the orbital tests. Includes the Sun, all eight planets, an illustrative Earth–Moon system, Saturn's rings, a deterministic star field, and sun-facing lighting. Planet interiors use a Three.js cutaway with a quarter wedge removed. Open **Interior** in the info panel for a schematic and a NASA source. Enable **Turtles all the way down** in Observatory to see eight world turtles beneath Earth.
 
 <img src="docs/mobile-overview.jpg" width="300" alt="Planetary on a phone, showing the Sun and planetary orbits between the header and the planet selector." />
 
 On phones, tap **Observatory** to change the view or tap the **info** button for the selected body. Tap the sky or the close button to return to the planets.
+
+Use the globe icon beside help to choose **English**, **Dansk**, **Español**, **Polski**, or **Deutsch**. The first visit uses the first supported browser language, falling back to English. Your choice is saved on this device when browser storage is available. Switching languages updates controls, help, planet descriptions, interior layers, dates, and numbers without resetting the simulation. The pop-out supports keyboard navigation, Escape, and outside-click dismissal.
+
+Translations live in `src/locales.ts`; each row contains English, Danish, Spanish, Polish, and German. Keep placeholders such as `{name}` in every translation. `src/i18n.ts` handles preferences, formatting, and elements marked with `data-i18n` attributes. Planet identifiers and scientific values remain language-independent.
 
 ## Develop, test, and build
 
@@ -31,7 +35,7 @@ To deploy, run `npm run build` and upload `dist/` to a static host. `npm run pre
 
 ## GitHub Pages
 
-The [publish workflow](.github/workflows/publish.yml) runs on every push to `main` and can also be started manually from the Actions tab. It installs locked dependencies with `npm ci`, runs Vitest, type-checks and builds with Vite, and deploys only the generated `dist/` artifact to the `github-pages` environment.
+The [publish workflow](.github/workflows/publish.yml) runs on pull requests and every push to `main`, and can also be started manually from the Actions tab. Pull requests run validation only; deployment remains restricted to `main`. It installs locked dependencies with `npm ci`, runs Vitest, type-checks and builds with Vite, and deploys only the generated `dist/` artifact to the `github-pages` environment.
 
 Pages must use **GitHub Actions** as its publishing source. The Vite configuration uses relative asset URLs (`base: './'`) so the build works under the repository's `/planetary/` path. A failed test or build prevents publication.
 
@@ -64,3 +68,4 @@ Surfaces are generated mathematically in a fragment shader. They suggest planeta
 ## Verification
 
 All five Vitest orbital tests and the production build (including strict TypeScript checks) pass. Chromium layout checks cover 320 × 568 and 390 × 844 portrait viewports, 844 × 390 landscape, and the desktop layout at 1366 × 900.
+

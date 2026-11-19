@@ -4,12 +4,35 @@
 
 .mobile-tools, .panel-close { display: none; }
 
+.header-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+#language-toggle { display: inline-flex; align-items: center; justify-content: center; }
+#language-options {
+  position: fixed; inset: 70px 32px auto auto; margin: 0;
+  width: 200px; max-width: calc(100vw - 20px); max-height: calc(100dvh - 80px);
+  overflow-y: auto; padding: 10px; background: #10161f; color: var(--text);
+  border: 1px solid #ffffff25; border-radius: 12px; box-shadow: 0 12px 40px #0008;
+}
+#language-heading { margin: 6px 10px 10px; color: var(--muted); font-size: 14px; }
+#language-list { display: grid; gap: 4px; }
+#language-list button { min-height: 44px; padding: 10px; border-radius: 6px; text-align: left; font-size: 16px; }
+#language-list button:hover, #language-list button:focus-visible { background: #ffffff0b; }
+#language-list button[aria-pressed="true"] { color: var(--mint); background: #9adfc817; }
+#language-list button[aria-pressed="true"]::after { content: '✓'; float: right; }
+.switch { flex-shrink: 0; }
+.toggle-row > [data-i18n] { padding-right: 8px; }
+.segments button { min-width: 0; overflow-wrap: anywhere; }
+
 @media (max-width: 700px), (max-width: 950px) and (max-height: 500px) {
   header { height: 56px; padding: 0 12px; gap: 6px; }
   .brand { font-size: 20px; white-space: nowrap; }
   .brand-icon { font-size: 24px; margin-right: 3px; }
   .header-middle, .intro, .view-status, .navigation-hint { display: none; }
   .mobile-tools { display: flex; gap: 4px; margin-left: auto; }
+  .mobile-tools { flex: 1; min-width: 0; }
+  .mobile-tools button { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .header-actions { gap: 4px; }
+  .header-actions .icon-button { height: 36px; width: 32px; flex-shrink: 0; }
+  #language-options { top: 60px; right: 10px; }
   .mobile-tools button, .panel-close { min-height: 44px; color: var(--mint); }
   .mobile-tools button { padding: 0 6px; font-size: 12px; }
   .panel-close { display: block; min-width: 44px; font-size: 22px; }
@@ -47,6 +70,11 @@
   output { font-size: 10px; min-width: 77px; }
 }
 
+@media (max-width: 380px) {
+  .brand { font-size: 18px; }
+  .brand-icon { display: none; }
+}
+
 .details { max-height: max(240px, calc(100dvh - 325px)); overflow-y: auto; }
 #interior { border-top: 1px solid var(--line); margin-bottom: 12px; }
 #interior summary { color: var(--mint); cursor: pointer; padding: 12px 0; font-size: 12px; }
@@ -65,3 +93,4 @@
   .controls { max-height: calc(100dvh - 335px); overflow-y: auto; }
   main:has(#interior[open]) .intro { visibility: hidden; }
 }
+
